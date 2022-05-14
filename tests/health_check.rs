@@ -1,9 +1,9 @@
 use std::net::TcpListener;
 
-// `tokio::test` is the testing equivalent of `tokio::main`.
-// It also spares you from having to specify the `#[test]` attribute. //
-// You can inspect what code gets generated using
-// `cargo expand --test health_check` (<- name of the test file) #[tokio::test]
+use sqlx::{Connection, PgConnection};
+
+use zero2prod::configuration::get_configuration;
+
 #[tokio::test]
 async fn health_check_works() {
     // Arrange
@@ -26,6 +26,11 @@ async fn health_check_works() {
 async fn subscribe_returns_a_200_for_valid_form_data() {
     // arrange
     let app_address = spawn_app();
+    let configuration = get_configuration().expect("Failed to read configuration");
+    let connection_string = configuration.database.connection_string();
+    let connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to connect to Postgres.");
     let client = reqwest::Client::new();
 
     // act
